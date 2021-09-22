@@ -11,8 +11,8 @@ int main(int argc, char *argv[]){
     char* params1[argi];
     int params1Size = argi;
     argi++;
-    
-    for(int i = 1; i < argi-1; i++){
+    int i;
+    for(i = 1; i < argi-1; i++){
         params1[i-1] = argv[i];
     }
     params1[params1Size-1] = NULL;
@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
     char* params2[argc-argi+1];
     int params2Size = argc-argi+1;
     
-    int i = 0;
+    i = 0;
     while(argi < argc){
         params2[i] = argv[argi];
         i++;

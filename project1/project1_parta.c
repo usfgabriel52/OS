@@ -7,13 +7,14 @@ int main(){
     char entry[100];
     fgets(entry,100,stdin);
     int totalSpace = 0;
-    for(int i = 0; i< strlen(entry);i++){
+    int i;
+    for( i = 0; i< strlen(entry);i++){
         if (entry[i] == ' ')
             totalSpace++;
     }
     char argument_list[totalSpace+1][100];
     int lastpos = 0;
-    for(int i = 0; i < totalSpace+1;i++){
+    for( i = 0; i < totalSpace+1;i++){
         int j =0;
         while(entry[lastpos + j] !=' '){
             if(entry[lastpos + j] == '\0' ||entry[lastpos + j] == '\n' )
@@ -25,7 +26,7 @@ int main(){
         argument_list[i][j] = '\0';
     }
     char* argl[totalSpace +2];
-    for (int i = 0; i < totalSpace +1 ; i++) 
+    for ( i = 0; i < totalSpace +1 ; i++) 
         argl[i] = argument_list[i];
     argl[totalSpace+1] = NULL;
 
