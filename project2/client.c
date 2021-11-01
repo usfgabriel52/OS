@@ -32,7 +32,8 @@ int main(int argc, char *argv[]){
         int i = 0 ;
         while(i+4 <= strlen(input)){
             while(shared->send_count > shared->recv_count);
-                for(int j = 0; j<4;j++){
+            int j;    
+            for(j = 0; j<4;j++){
                     shared->buf[j] = input[i+j];
                 }
             shared->send_count++;
