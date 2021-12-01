@@ -4,10 +4,10 @@
 #include <sys/shm.h>
 #include <string.h>
 #include <pthread.h>
-
 #define BUFFERSIZE 100
 #define MAX_MSG_LEN 1024
 #define NUMBER_OF_MSG 5
+
 
 
 struct message_buffer {
@@ -23,48 +23,59 @@ struct shm_data {
 };
 
 void * sendMessages();
-
+void * recieveMessages();
 struct shm_data *shared;
 int sendArrayCount;
 
 int main(int argc, char *argv[]){
-    sendArrayCount = 0;
+
     char* key = argv[1];
-    printf("Getting MemID\n");
     int memId;
     memId = shmget(atoi(key),sizeof(struct shm_data),0666);
     if (memId == 0){
         return -1;
     }
-    printf("Attaching MemId\n");
     shared = (struct shm_data*) shmat(memId,NULL,0);
     printf("%d\n",shared->c2s.front);
     printf("%d\n",shared->c2s.tail);
-    pthread_t sendThreadId;
-    
-        int err = pthread_create(&sendThreadId,NULL,&sendMessages,NULL);
-    
+    pthread_t sendThreadId,recieveThreadId,khThreadId;
+    int err = pthread_create(&sendThreadId,NULL,&sendMessages,NULL);
+    int err2 = pthread_create(&recieveThreadId,NULL,&recieveMessages,NULL);
     pthread_exit(NULL);
 }
 
 void * sendMessages(){
+    char message[MAX_MSG_LEN];
     while(1){
-    
-        sendArrayCount++;
-        if (sendArrayCount == 5){
-            sendArrayCount = 0;
-        }
-
+        printf("client>");
         pthread_mutex_lock(&shared->c2s.mutex);
-        while((shared->c2s.tail - shared->c2s.front) == NUMBER_OF_MSG)
-            pthread_cond_wait(&shared->c2s.empty,&shared->c2s.mutex);
-        printf("Enter Message: ");
-        fgets(shared->c2s.messages[shared->c2s.tail%5],MAX_MSG_LEN,stdin);
-        shared->c2s.tail++;
-        pthread_cond_signal(&shared->c2s.empty);
-        pthread_mutex_unlock(&shared->c2s.mutex);
-        
-
+        while((shared->c2s.tail - shared->c2s.front) != 0)
+            pthread_cond_wait(&shared->c2s.full,&shared->c2s.mutex);
+        if(fgets(shared->c2s.messages[shared->c2s.tail%NUMBER_OF_MSG],MAX_MSG_LEN,stdin) != NULL){
+            shared->c2s.tail++;
+            pthread_cond_signal(&shared->c2s.empty);
+            pthread_mutex_unlock(&shared->c2s.mutex);
+        }
     }
     return 0;
 }
+
+void * recieveMessages(){
+    while(1){
+        pthread_mutex_lock(&shared->s2c.mutex);
+        while(!(shared->s2c.front < shared->s2c.tail))
+            pthread_cond_wait(&shared->s2c.empty,&shared->s2c.mutex);
+        printf("\nMessage Recieved: %s",shared->s2c.messages[shared->s2c.front%NUMBER_OF_MSG]);
+        fflush(stdout);
+        printf("client>");
+        fflush(stdout);
+        shared->s2c.front++;
+        pthread_cond_signal(&shared->s2c.full);
+        pthread_mutex_unlock(&shared->s2c.mutex);
+        
+       
+
+    }
+
+}
+
